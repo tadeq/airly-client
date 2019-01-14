@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image, ImageTk
 
-
 # apikey = YOUR API KEY
 
 
@@ -35,7 +34,6 @@ class Window(tk.Tk):
         self.on_current_click()
 
     def plot_24h(self, option):
-        pollutant = 'PM10'
         self.reset_window()
         if self.measurements is None:
             messagebox.showinfo('No address found', 'Find the address first')
@@ -52,22 +50,29 @@ class Window(tk.Tk):
         pm10_val = [measurement['values'][i[1]]['value'] for measurement in period]
         pm25_std = [measurement['standards'][0]['percent'] for measurement in period]
         pm10_std = [measurement['standards'][1]['percent'] for measurement in period]
-        f, ax1 = plt.subplots()
+        plt.figure(figsize=(13, 5))
+        ax1 = plt.subplot(1, 2, 1)
         x = np.arange(24)
         plt.xticks(x, hours, rotation=80)
         plt.xlabel('time')
+        ax1.set_title(option)
         ax2 = ax1.twinx()
         ax2.grid(True)
-        if pollutant == 'PM2.5':
-            ax1.plot(x, pm25_val)
-            ax2.plot(x, pm25_std)
-            ax1.set_ylabel('PM2.5 [μg/m³]')
-            ax2.set_ylabel('PM2.5 [%]')
-        elif pollutant == 'PM10':
-            ax1.plot(x, pm10_val)
-            ax2.plot(x, pm10_std)
-            ax1.set_ylabel('PM10 [μg/m³]')
-            ax2.set_ylabel('PM10 [%]')
+        ax1.plot(x, pm25_val)
+        ax2.plot(x, pm25_std)
+        ax1.set_ylabel('PM2.5 [μg/m³]')
+        ax2.set_ylabel('PM2.5 [%]')
+        ax3 = plt.subplot(1, 2, 2)
+        ax3.set_title(option)
+        plt.xticks(x, hours, rotation=80)
+        plt.xlabel('time')
+        ax4 = ax3.twinx()
+        ax4.grid(True)
+        ax3.plot(x, pm10_val)
+        ax4.plot(x, pm10_std)
+        ax3.set_ylabel('PM10 [μg/m³]')
+        ax4.set_ylabel('PM10 [%]')
+        plt.tight_layout()
         plt.savefig('plot.png')
         img = ImageTk.PhotoImage(Image.open('plot.png'))
         self.displayed_plot = tk.Label(image=img)
@@ -88,7 +93,7 @@ class Window(tk.Tk):
         curr = self.measurements['current']
         index = curr['indexes'][0]
         canvas = tk.Canvas(width=120, height=120)
-        canvas.place(x=890, y=10)
+        canvas.place(x=1230, y=10)
         canvas.create_oval(5, 5, 115, 115, fill=index['color'])
         if index['value'] is None:
             messagebox.showinfo('Can\'t get measurements', 'There is no installation near given address')
@@ -119,7 +124,7 @@ class Window(tk.Tk):
         super().__init__()
         self.winfo_toplevel().resizable(False, False)
         self.winfo_toplevel().title('Airly client')
-        self.geometry('1024x768')
+        self.geometry('1366x768')
         tk.Label(text='City*').place(x=10, y=10)
         tk.Label(text='Street').place(x=10, y=35)
         tk.Label(text='Number').place(x=10, y=60)
@@ -175,4 +180,5 @@ def load_installations():
 if __name__ == '__main__':
     geolocator = Nominatim(user_agent='__main__')
     window = Window()
+    window.protocol("WM_DELETE_WINDOW", lambda: quit())
     window.mainloop()
